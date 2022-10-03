@@ -24,38 +24,36 @@ public class Packet {
     public static final long UID = UUID.randomUUID().getLeastSignificantBits();
     private static final long HASHCODE = 0x6D0A0B9F;
 
+    public static DatagramPacket createPacket(long code, InetAddress myIP, InetAddress destIP, int destPort){
+        ByteBuffer buffer = ByteBuffer.allocate(BYTES_IN_PACKET);
+        buffer.putLong(code);
+        buffer.putLong(hashIP(myIP));
+        buffer.putLong(UID);
+        return new DatagramPacket(buffer.array(), buffer.array().length, destIP, destPort);
+    }
     public static DatagramPacket createHelloPacket(InetAddress myIP, InetAddress destIP, int destPort){
         if (!destIP.isMulticastAddress()){
             throw new RuntimeException("Destination address is not multicast address");
         }
-        ByteBuffer buffer = ByteBuffer.allocate(BYTES_IN_PACKET);
-        buffer.putLong(HELLO_CODE);
-        buffer.putLong(hashIP(myIP));
-        buffer.putLong(UID);
-        return new DatagramPacket(buffer.array(), buffer.array().length, destIP, destPort);
+        return createPacket(HELLO_CODE, myIP, destIP, destPort);
     }
     public static DatagramPacket createByePacket(InetAddress myIP, InetAddress destIP, int destPort){
         if (!destIP.isMulticastAddress()){
             throw new RuntimeException("Destination address is not multicast address");
         }
-        ByteBuffer buffer = ByteBuffer.allocate(BYTES_IN_PACKET);
-        buffer.putLong(BYE_CODE);
-        buffer.putLong(hashIP(myIP));
-        buffer.putLong(UID);
-        return new DatagramPacket(buffer.array(), buffer.array().length, destIP, destPort);
+        return createPacket(BYE_CODE, myIP, destIP, destPort);
     }
-
-    public static boolean isHello(DatagramPacket packet){
+    public static long getCode(DatagramPacket packet){
         ByteBuffer buffer = ByteBuffer.allocate(BYTES_IN_PACKET);
         buffer.put(packet.getData());
-        return HELLO_CODE == buffer.getLong(0);
+        return buffer.getLong(0);
+    }
+    public static boolean isHello(DatagramPacket packet){
+        return HELLO_CODE == getCode(packet);
     }
     public static boolean isBye(DatagramPacket packet){
-        ByteBuffer buffer = ByteBuffer.allocate(BYTES_IN_PACKET);
-        buffer.put(packet.getData());
-        return BYE_CODE == buffer.getLong(0);
+        return BYE_CODE == getCode(packet);
     }
-
     public static long getHashedIP(DatagramPacket packet){
         ByteBuffer buffer = ByteBuffer.allocate(BYTES_IN_PACKET);
         buffer.put(packet.getData());

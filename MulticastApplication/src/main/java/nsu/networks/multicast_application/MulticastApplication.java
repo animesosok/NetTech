@@ -11,6 +11,7 @@ public class MulticastApplication extends Application {
     @Override
     public void start(Stage stage) throws IOException {
         FXMLLoader fxmlLoader = new FXMLLoader(MulticastApplication.class.getResource("multicast-view.fxml"));
+        MulticastController controller = fxmlLoader.getController();
         Scene scene = new Scene(fxmlLoader.load(), 240, 180);
         stage.setTitle("MulticastApp");
         stage.setOnCloseRequest(e -> {

@@ -36,30 +36,6 @@ public class SmartMulticastSocket {
         }
     }
 
-    public SmartMulticastSocket(String mcastaddr, int port, DatagramPacket ping, int period) throws IOException {
-        if (InetAddress.getByName(mcastaddr).isMulticastAddress()) {
-            mcastSocket = new MulticastSocket(port);
-            mcastAddress = InetAddress.getByName(mcastaddr);
-            mcastSocket.joinGroup(mcastAddress);
-        }
-        else {
-            throw new RuntimeException("Socket address is not multicast address");
-        }
-        pingPacket = ping;
-        notificationPeriod = period;
-    }
-    public SmartMulticastSocket(String mcastaddr, int port, DatagramPacket ping) throws IOException {
-        if (InetAddress.getByName(mcastaddr).isMulticastAddress()) {
-            mcastSocket = new MulticastSocket(port);
-            mcastAddress = InetAddress.getByName(mcastaddr);
-            mcastSocket.joinGroup(mcastAddress);
-        }
-        else {
-            throw new RuntimeException("Socket address is not multicast address");
-        }
-
-        pingPacket = ping;
-    }
     public SmartMulticastSocket(String mcastaddr, int port) throws IOException {
         if (InetAddress.getByName(mcastaddr).isMulticastAddress()) {
             mcastSocket = new MulticastSocket(port);
@@ -72,18 +48,16 @@ public class SmartMulticastSocket {
         pingPacket = new DatagramPacket(mcastAddress.getAddress(), mcastAddress.getAddress().length);
     }
 
-    public void setReceiveTimeout(int ms) throws SocketException {
+    public void setReceiveTimeout(int ms) {
         if(mcastSocket.isClosed()){
             throw new RuntimeException("Socket already closed");
         }
-        mcastSocket.setSoTimeout(ms);
-    }
-    public void setMaxReceivedPacketSize(int bytes){
-        if(mcastSocket.isClosed()){
-            throw new RuntimeException("Socket already closed");
+        try {
+            mcastSocket.setSoTimeout(ms);
+        } catch (SocketException ignored) {
         }
-        maxReceivedPacketSize = bytes;
     }
+
     public void setNotificationPeriod(int ms){
         if(mcastSocket.isClosed()){
             throw new RuntimeException("Socket already closed");
@@ -115,6 +89,9 @@ public class SmartMulticastSocket {
             throw new RuntimeException("Socket already closed");
         }
         timer.purge();
+    }
+    public boolean isClosed(){
+        return mcastSocket.isClosed();
     }
     public void close(){
         if(mcastSocket.isClosed()){

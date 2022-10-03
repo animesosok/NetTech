@@ -16,10 +16,14 @@
     <Label fx:id="countLabel" />
    <AnchorPane prefHeight="66.0" prefWidth="200.0">
       <children>
-          <Button alignment="CENTER" layoutX="50.0" layoutY="44.0" onAction="#onStartButtonClick" prefHeight="43.0" prefWidth="101.0" text="START">
+          <Button fx:id="startButton" alignment="CENTER" layoutX="50.0" layoutY="44.0" onAction="#onStartButtonClick" prefHeight="43.0" prefWidth="101.0" text="START">
             <font>
                <Font name="System Bold" size="20.0" />
             </font></Button>
+          <Button fx:id="finishButton" alignment="CENTER" layoutX="50.0" layoutY="44.0" onAction="#onFinishButtonClick" prefHeight="43.0" prefWidth="101.0" text="Finish" visible="false">
+              <font>
+                  <Font name="System Bold" size="20.0" />
+              </font></Button>
       </children>
    </AnchorPane>
 </VBox>
