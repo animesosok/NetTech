@@ -5,8 +5,8 @@
 **Сервер должен быть запущен раньше клиента**<br/>
 Для запуска на Windows нужно открыть консольку, перейти в папку и прописать команду:<br/>
 # Клиент
-** gradlew run [IP] [Port] [FilePath]**<br/>
+**gradlew run [IP] [Port] [FilePath]**<br/>
 # Сервер
-** gradlew run [Port] ** <br/>
+**gradlew run [Port]** <br/>
 
  
