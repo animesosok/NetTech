@@ -32,7 +32,13 @@ public class Server {
             LOGGER.info(msg);
             return;
         }
-        int serverPort = Integer.parseInt(args[0]);
+        int serverPort;
+        try {
+            serverPort = Integer.parseInt(args[0]);
+        } catch(NumberFormatException | NullPointerException e) {
+            LOGGER.info("Port must be Integer");
+            return;
+        }
         ServerSocket serverSocket = null;
 
         new File(SAVE_DIRECTORY).mkdirs();
