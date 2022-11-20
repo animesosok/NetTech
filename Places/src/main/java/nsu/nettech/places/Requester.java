@@ -34,9 +34,10 @@ public class Requester {
     }
 
     static public  CompletableFuture<LocationList> getLocationList(String locationName) {
+        String locName = locationName.replace(" ", "+");
         String requestURIString = String.format(
                 "https://graphhopper.com/api/1/geocode?q=%s&key=%s",
-                locationName,
+                locName,
                 LOCATION_KEY
                 );
         HttpRequest request = HttpRequest.newBuilder()
