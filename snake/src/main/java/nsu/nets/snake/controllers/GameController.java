@@ -4,12 +4,15 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import javafx.animation.Animation;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.scene.canvas.Canvas;
 
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.Button;
+import javafx.scene.control.ListView;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.Pane;
@@ -39,6 +42,8 @@ public class GameController {
     private Canvas snakeField;
     @FXML
     private Button leaveButton;
+    @FXML
+    private ListView<String> gamerList;
 
     private double fieldSizeX;
     private double fieldSizeY;
@@ -142,6 +147,12 @@ public class GameController {
         for (var snake : snakeList){
             drawSnake(snake);
         }
+        ObservableList<String> scoreList =  FXCollections.observableArrayList();
+        for(var player : playerList) {
+            scoreList.add(player.getName() + ": " + player.getScore());
+        }
+        gamerList.setItems(scoreList);
+        gamerList.refresh();
         nextState();
 
     }
@@ -327,6 +338,13 @@ public class GameController {
         newSnake.addPoints(newPoint);
         int eaten = 0;
         if(foodList.contains(newPoint)){
+            for(int i = 0; i < playerList.size(); i++){
+                var player = playerList.get(i);
+                if(player.getId() == snake.getPlayerId()){
+                    playerList.set(i, SnakesProto.GamePlayer.newBuilder(player)
+                            .setScore(player.getScore()+1).build());
+                }
+            }
             eaten = 1;
             foodList.remove(newPoint);
         }
