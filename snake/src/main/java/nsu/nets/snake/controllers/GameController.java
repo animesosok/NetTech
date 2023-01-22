@@ -56,10 +56,10 @@ public class GameController {
     private SnakesProto.GameState.Snake mainSnake;
 
     private int stateNumber = random.nextInt();
-    private int seqNumber = random.nextInt();
+    private int seqNumber = 21;
 
     private boolean master = false;
-    private int masterId;
+    private int playerId = 0;
     private boolean deputy = false;
     private int hostPort;
     private InetAddress hostAddress;
@@ -72,6 +72,7 @@ public class GameController {
        gameSettings = chosenGameSettings;
        msgController = controller;
        master = true;
+       seqNumber = random.nextInt();
     }
     public GameController(GameSettings chosenGameSettings, MessageController controller, InetAddress address, int port){
         gameSettings = chosenGameSettings;
@@ -104,11 +105,11 @@ public class GameController {
             }
         });
         if(master){
-            masterId = random.nextInt();
-            mainSnake = createSnake(masterId);
+            playerId = random.nextInt();
+            mainSnake = createSnake(playerId);
             SnakesProto.GamePlayer player = SnakesProto.GamePlayer.newBuilder()
                     .setName(gameSettings.getPlayerName())
-                    .setId(masterId)
+                    .setId(playerId)
                     .setIpAddress(msgController.getLocalAddress().toString())
                     .setPort(msgController.getPort())
                     .setRole(SnakesProto.NodeRole.NORMAL)
@@ -159,25 +160,30 @@ public class GameController {
                 */
                 if (msg.hasSteer()){
                     if (master){
-                        int playerId = idMap.get(packet.getAddress().toString().concat(Integer.toString(packet.getPort())));
+                        System.out.println("onppps");
+                        int id = idMap.get(packet.getAddress().toString().concat(Integer.toString(packet.getPort())));
                         SnakesProto.GameState.Snake snake;
                         for(int i =0; i < snakeList.size(); i++){
                             snake = snakeList.get(i);
-                            if(snake.getPlayerId() == playerId){
+                            if(snake.getPlayerId() == id){
                                 snakeList.set(i, steerSnake(snake, msg.getSteer().getDirection()));
                             }
                         }
                         //pingMap.replace(playerId, System.currentTimeMillis());
+                        sendAck(msg, id);
                     }
                 }
-                /*
+
                 if (msg.hasAck()){
-                    //TAKOGO NE bivaet
+                    if(!master){
+                        if(playerId == 0 && msg.getReceiverId() != 0){
+                            playerId = msg.getReceiverId();
+                        }
+                    }
                 }
-                */
+
                 if (msg.hasState()){
                     if (!master) {
-                        System.out.println("sadadsadada");
                         SnakesProto.GameState state = msg.getState().getState();
                         if (state.getStateOrder() > stateNumber) {
                             stateNumber = state.getStateOrder();
@@ -217,6 +223,8 @@ public class GameController {
                                 .setScore(0)
                                 .build();
                         playerList.add(player);
+                        //
+                        sendAck(msg, id);
 
                     }
                 }
@@ -332,7 +340,7 @@ public class GameController {
             checkAliveSnakes();
             for(var player : playerList) {
                 int id = player.getId();
-                if (id != masterId) {
+                if (id != playerId) {
                     SnakesProto.GameMessage msg;
                     SnakesProto.GameState gameState = SnakesProto.GameState.newBuilder()
                             .setStateOrder(stateNumber)
@@ -353,7 +361,7 @@ public class GameController {
                     packet.setAddress(addressMap.get(id).getKey());
                     packet.setPort(addressMap.get(id).getValue());
                     msgController.send(packet);
-                    System.out.println("onppps");
+
                 }
             }
             stateNumber++;
@@ -377,11 +385,12 @@ public class GameController {
                 packet.setAddress(hostAddress);
 
                 msgController.send(packet);
+                msgController.addToACKQueue(seqNumber, packet);
             }
     }
     private void createMaster(){
         master = true;
-        Timeline timeline = new Timeline(new KeyFrame(Duration.millis(200), e -> masterFunc()));
+        Timeline timeline = new Timeline(new KeyFrame(Duration.millis(gameSettings.getStateDelay()), e -> masterFunc()));
         timeline.setCycleCount(Animation.INDEFINITE);
         timeline.play();
         announceThread = new Thread(this::announceFunc);
@@ -527,7 +536,7 @@ public class GameController {
                 .setRoleChange(roleChangeMsg)
                 .setMsgSeq(seqNumber)
                 .setReceiverId(id)
-                .setSenderId(masterId)
+                .setSenderId(playerId)
                 .build();
         DatagramPacket packet = new DatagramPacket(msg.toByteArray(), msg.getSerializedSize());
         packet.setPort(addressMap.get(id).getValue());
@@ -537,5 +546,17 @@ public class GameController {
         return SnakesProto.GamePlayer.newBuilder()
                 .setRole(role)
                 .build();
+    }
+    private void sendAck(SnakesProto.GameMessage msg, int playerId){
+        SnakesProto.GameMessage ack = SnakesProto.GameMessage.newBuilder()
+                .setAck(SnakesProto.GameMessage.AckMsg.newBuilder().getDefaultInstanceForType())
+                .setMsgSeq(msg.getMsgSeq())
+                .setSenderId(this.playerId)
+                .setReceiverId(playerId)
+                .build();
+        DatagramPacket packet = new DatagramPacket(ack.toByteArray(), ack.getSerializedSize());
+        packet.setAddress(addressMap.get(playerId).getKey());
+        packet.setPort(addressMap.get(playerId).getValue());
+        msgController.send(packet);
     }
 }

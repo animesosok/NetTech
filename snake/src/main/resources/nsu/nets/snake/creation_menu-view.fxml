@@ -16,7 +16,7 @@
       <TextField fx:id="sizeYField" layoutX="97.0" layoutY="66.0" text="30" />
       <TextField fx:id="foodField" layoutX="342.0" layoutY="22.0" text="1" />
       <TextField fx:id="gameNameField" layoutX="212.0" layoutY="188.0" text="mygame" />
-      <TextField fx:id="delayField" layoutX="342.0" layoutY="66.0" text="1000" />
+      <TextField fx:id="delayField" layoutX="342.0" layoutY="66.0" text="200" />
       <Label layoutX="286.0" layoutY="70.0" text="Delay" />
    </children>
 </Pane>
