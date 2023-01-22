@@ -6,21 +6,23 @@ import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
-import javafx.scene.Node;
 import javafx.scene.canvas.Canvas;
 
 import javafx.scene.canvas.GraphicsContext;
+import javafx.scene.control.Button;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 import javafx.util.Duration;
 import javafx.util.Pair;
+import nsu.nets.snake.MainApplication;
 import nsu.nets.snake.SnakesProto;
 import nsu.nets.snake.models.GameSettings;
 
 import nsu.nets.snake.net.MessageController;
 
+import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -28,7 +30,6 @@ import java.util.*;
 import java.util.concurrent.BlockingQueue;
 
 import static java.lang.Math.*;
-import static java.lang.Thread.onSpinWait;
 import static java.lang.Thread.sleep;
 
 public class GameController {
@@ -36,6 +37,8 @@ public class GameController {
     Pane pane;
     @FXML
     private Canvas snakeField;
+    @FXML
+    private Button leaveButton;
 
     private double fieldSizeX;
     private double fieldSizeY;
@@ -87,7 +90,9 @@ public class GameController {
         fieldSizeY = snakeField.getHeight();
         squareSize = round(min(fieldSizeX / gameSettings.getSizeX(), fieldSizeY / gameSettings.getSizeY()));
         graphicsContext = snakeField.getGraphicsContext2D();
-
+        leaveButton.setOnAction(event -> {
+            leaveEvent();
+        });
 
         pane.setOnKeyPressed(new EventHandler<KeyEvent>() {
             @Override
@@ -257,7 +262,9 @@ public class GameController {
         graphicsContext.fillRect(x * squareSize, y * squareSize, squareSize, squareSize);
     }
     private void drawSnake(SnakesProto.GameState.Snake snake){
-
+        if (snake == null){
+            return;
+        }
         graphicsContext.setFill(Color.web("FFFAAA"));
         int x = 0;
         int y = 0;
@@ -285,6 +292,9 @@ public class GameController {
         }
     }
     private SnakesProto.GameState.Snake moveSnake(SnakesProto.GameState.Snake snake){
+        if (snake == null){
+            return null;
+        }
         SnakesProto.Direction direct = snake.getHeadDirection();
         SnakesProto.GameState.Snake.Builder newSnake = null;
         SnakesProto.GameState.Coord newPoint = null;
@@ -333,7 +343,9 @@ public class GameController {
     private void nextState(){
         if (master){
             generateFood();
-            mainSnake = moveSnake(mainSnake);
+            if (mainSnake != null) {
+                mainSnake = moveSnake(mainSnake);
+            }
             for (int i = 0; i < snakeList.size(); i++){
                 snakeList.set(i, moveSnake(snakeList.get(i)));
             }
@@ -342,15 +354,16 @@ public class GameController {
                 int id = player.getId();
                 if (id != playerId) {
                     SnakesProto.GameMessage msg;
-                    SnakesProto.GameState gameState = SnakesProto.GameState.newBuilder()
+                    SnakesProto.GameState.Builder gameState = SnakesProto.GameState.newBuilder()
                             .setStateOrder(stateNumber)
                             .addAllSnakes(snakeList)
-                            .addSnakes(mainSnake)
                             .setPlayers(SnakesProto.GamePlayers.newBuilder().addAllPlayers(playerList).build())
-                            .addAllFoods(foodList)
-                            .build();
+                            .addAllFoods(foodList);
+                    if (mainSnake != null){
+                        gameState.addSnakes(mainSnake);
+                    }
                     SnakesProto.GameMessage.StateMsg stateMsg = SnakesProto.GameMessage.StateMsg.newBuilder()
-                            .setState(gameState)
+                            .setState(gameState.build())
                             .build();
                     msg = SnakesProto.GameMessage.newBuilder()
                             .setState(stateMsg)
@@ -369,7 +382,7 @@ public class GameController {
         }
     }
     private void changeDirection(SnakesProto.Direction direction){
-            if (master) {
+            if (master && mainSnake != null) {
                 mainSnake = steerSnake(mainSnake, direction);
             }
             else {
@@ -461,19 +474,22 @@ public class GameController {
             var head = snakeList.get(i).getPoints(0);
             int x = 0;
             int y = 0;
-            for (var point: mainSnake.getPointsList()) {
-                int ax = x + point.getX();
-                int ay = y + point.getY();
+            if (mainSnake != null){
+                for (var point: mainSnake.getPointsList()) {
+                    int ax = x + point.getX();
+                    int ay = y + point.getY();
 
-                if(ax == head.getX() && ay == head.getY()){
-                    if(!removeList.contains(i)){
-                        removeList.add(i);
-                        break;
+                    if(ax == head.getX() && ay == head.getY()){
+                        if(!removeList.contains(i)){
+                            removeList.add(i);
+                            break;
+                        }
                     }
+                    x = ax;
+                    y = ay;
                 }
-                x = ax;
-                y = ay;
             }
+
             for (var snake : snakeList){
                 x = 0;
                 y = 0;
@@ -511,6 +527,38 @@ public class GameController {
                     }
                 }
 
+            }
+        }
+        if (mainSnake != null) {
+            var head = mainSnake.getPoints(0);
+            int x, y;
+            for (var snake : snakeList) {
+                x = 0;
+                y = 0;
+                for (var point : snake.getPointsList()) {
+                    int ax = x + point.getX();
+                    int ay = y + point.getY();
+
+                    if (ax == head.getX() && ay == head.getY()) {
+                        mainSnake = null;
+                    }
+                    x = ax;
+                    y = ay;
+                }
+            }
+            x = 0;
+            y = 0;
+            boolean first = true;
+            for (var point : mainSnake.getPointsList()) {
+                int ax = x + point.getX();
+                int ay = y + point.getY();
+
+                if (ax == head.getX() && ay == head.getY() && !first) {
+                    mainSnake = null;
+                }
+                x = ax;
+                y = ay;
+                first = false;
             }
         }
         for (int i : removeList){
@@ -558,5 +606,19 @@ public class GameController {
         packet.setAddress(addressMap.get(playerId).getKey());
         packet.setPort(addressMap.get(playerId).getValue());
         msgController.send(packet);
+    }
+    public void stop(){
+        masterThread.stop();
+        if(announceThread != null && announceThread.isAlive()){
+            announceThread.stop();
+        }
+    }
+    private void leaveEvent(){
+        this.stop();
+        try {
+            MainApplication.showMenu();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }

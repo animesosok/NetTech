@@ -135,5 +135,10 @@ public class MessageController {
         ackMap.put(seqNum, packet);
         ackQueue.add(seqNum);
     }
-
+    public void stop(){
+        sender.stop();
+        receiver.stop();
+        ackReceiver.stop();
+        mcastReceiver.stop();
+    }
 }

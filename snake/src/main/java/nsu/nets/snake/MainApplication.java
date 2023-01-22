@@ -17,7 +17,7 @@ public class MainApplication extends Application {
 
     private static Stage appStage;
     private static MessageController msgController = new MessageController();
-    MenuController menuController;
+    private static MenuController menuController;
 
     /*
         Создать поля для сцен чтобы не создавать несколько раз
@@ -26,14 +26,20 @@ public class MainApplication extends Application {
     @Override
     public void start(Stage stage) throws IOException {
         appStage = stage;
-        FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("menu-view.fxml"));
+       showMenu();
+
+    }
+    public static void showMenu() throws IOException {
+        FXMLLoader fxmlLoader = new FXMLLoader(MainApplication.class.getResource("menu-view.fxml"));
         menuController = new MenuController(msgController);
         fxmlLoader.setController(menuController);
         Scene scene = new Scene(fxmlLoader.load(), 600, 400);
-        stage.setScene(scene);
-        stage.show();
+        appStage.setScene(scene);
+        appStage.show();
         menuController.init();
-
+        appStage.setOnCloseRequest(event -> {
+            menuController.stop();
+        });
     }
 
     public static void showCreationGameScene(String playerName){

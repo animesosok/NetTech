@@ -101,4 +101,8 @@ public class MenuController{
         settings.setPlayerName(nameField.getText());
         MainApplication.showGame(settings);
     }
+    public void stop(){
+        msgController.stop();
+        menuThread.stop();
+    }
 }
