@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ListView?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.Pane?>
+
+<Pane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/18" xmlns:fx="http://javafx.com/fxml/1">
+   <children>
+      <Button fx:id="joinButton" layoutX="145.0" layoutY="360.0" mnemonicParsing="false" prefHeight="25.0" prefWidth="100.0" text="JOIN" />
+      <Button fx:id="createButton" layoutX="472.0" layoutY="360.0" mnemonicParsing="false" prefHeight="25.0" prefWidth="100.0" text="CREATE" />
+      <ListView fx:id="gameList" layoutX="400.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="350.0" prefWidth="200.0" />
+      <TextField fx:id="nameField" layoutX="112.0" layoutY="175.0" promptText="name" text="puc" />
+      <Label layoutX="124.0" layoutY="144.0" prefHeight="17.0" prefWidth="124.0" text="your name" />
+   </children>
+</Pane>
